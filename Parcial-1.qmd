@@ -7,13 +7,24 @@ editor: visual
 
 # 1.
 
-Considere el proceso estocástico dado por:
+Sea $X_t$ el proceso estocástico dado por:
 
 $$
 X_t = w_{t-2} + 0.5w_{t-1} + 2w_t+0.5w_{t+1} + w_{t+2}
 $$
 
 donde los $w_t$ son independientes con media $0$ y varianza $\sigma_w^2 = 4.8$.
+
+
+# 2.
+
+Sea $X_t$ el proceso estocastico estacionario dado por:
+$$
+X_t = 3.1 + 0.9X_{t−1} − 0.6X_{t−2} + w_t
+$$
+donde $w_t$ es ruido blanco gaussiano con media $0$ y varianza $\sigma_w^2 = 6.2$.
+
+
 
 # 3.
 
@@ -48,6 +59,7 @@ metro.cols <- c(
   "10:00",
   "11:00",
   "12:00",
+  
   "13:00",
   "14:00",
   "15:00",
@@ -67,11 +79,7 @@ colnames(data_20) <- metro.cols
 colnames(data_21) <- metro.cols
 ```
 
-```{r}
-
-```
-
-a\)
+a).
 
 Las dimensiones de los datos de 2019 son 3563 filas y 23 columnas.
 
@@ -79,7 +87,7 @@ Las dimensiones de los datos de 2020 son 3764 filas y 23 columnas.
 
 Las dimensiones de los datos de 2021 son 4122 filas y 23 columnas.
 
-b\)
+b).
 
 ```{r}
 datos_juntos <- bind_rows(data_19, data_20, data_21)
@@ -88,7 +96,7 @@ rm(data_19, data_20, data_21)
 
 Las dimensiones de los datos_juntos son 11449 filas y 23 columnas.
 
-c\)
+c).
 
 ```{r}
 datos_juntos$fecha <- datos_juntos$fecha |> as_date()
@@ -107,12 +115,12 @@ data$anio <- year(data$fecha)
 
 Dimensiones son 228980 filas y 10 columnas.
 
-d\)
+d).
 
 ```{r}
 data$linea <- data$linea |> tolower() 
-dat_lin_A <- data %>% filter(linea == "línea a")
-dat_lin_B <- data %>% filter(linea == "línea b")
+dat_lin_A <- data |> filter(linea == "línea a")
+dat_lin_B <- data |> filter(linea == "línea b")
 ```
 
 ```{r}
@@ -128,33 +136,127 @@ e).
 El 23 de Marzo de 2020 el Gobierno de Colombia expidió el Decreto 457 para el período de aislamiento preventivo obligatorio a causa del virus del COVID-19.
 
 ```{r}
-dat_lin_A <- dat_lin_A %>%
+dat_lin_A <- dat_lin_A |>
   mutate(pandemia = if_else(fecha < dmy("23-03-2020"), "no", "si"))
-
-
-dat_lin_A %>%
-  group_by(dia.sem, hora, pandemia) %>%
-  summarise(promedio = mean(per.num, na.rm = TRUE)) %>%
-  ggplot() + 
-  geom_line(aes(x = as_datetime(hora), y = promedio, color = dia.sem)) +
-  scale_x_datetime(breaks = "1 hour", date_labels =  "%H:%M") + facet_grid(cols = vars(pandemia))
-
-dat_lin_A %>%
-  filter(fecha > dmy("23-03-2020")) %>%
-  group_by(dia.sem, hora) %>%
-  summarise(promedio = mean(per.num, na.rm = TRUE)) %>%
-  ggplot() + 
-  geom_line(aes(x = as_datetime(hora), y = promedio, color = dia.sem)) +
-  scale_x_datetime(breaks = "1 hour", date_labels =  "%H:%M")
+dat_lin_B <- dat_lin_B |>
+  mutate(pandemia = if_else(fecha < dmy("23-03-2020"), "no", "si"))
 ```
+
+
+```{r}
+facet.names <- c(
+  'si'="Antes de la pandemia",
+  'no'="Despues de la pandemia"
+)
+
+dat_lin_A |>
+  group_by(dia.sem, hora, pandemia) |>
+  summarise(promedio = mean(per.num, na.rm = TRUE)) |>
+  ggplot() +
+  geom_line(aes(x = as_datetime(hora), y = promedio, color = dia.sem)) +
+  scale_x_datetime(breaks = "1 hour", date_labels =  "%H:00") + 
+  facet_grid(cols = vars(pandemia), labeller=as_labeller(facet.names)) +
+  labs(title = "Promedio de pasajeros por hora para la linea A", 
+       x = "Hora de servicio", 
+       y = "Promedio de pasajeros") +
+  scale_color_discrete(name = "Dia de la\nSemana")
+```
+
+se puede ver que es la mitad ... etc.
 
 f).
 
 ```{r}
-#
 lin.a <- dat_lin_A |> 
   group_by(fecha) |> 
-  summarise(a = sum(per.num, na.rm=TRUE))
+  summarise(per.dia.tot = sum(per.num, na.rm=TRUE))
+lin.b <- dat_lin_B |> 
+  group_by(fecha) |> 
+  summarise(per.dia.tot = sum(per.num, na.rm=TRUE))
 
-lin.a |> ggplot(aes(x = fecha, y = a)) + geom_line()
+# falta añadir día, día de la semana, semana, mes, año
+# para lin.a y lin.b
+```
+g).
+
+```{r}
+lin.a$linea <- "a"
+lin.b$linea <- "b"
+
+bind_rows(lin.a, lin.b) |> 
+  ggplot(aes(x = fecha, y = per.dia.tot, color = linea)) + 
+  geom_line()
+```
+
+
+```{r}
+# Esto es promedio por semana
+bind_rows(lin.a, lin.b) |> 
+  group_by(fecha = floor_date(fecha, unit = "week") ,linea) |> 
+  summarise(prom.mes = mean(per.dia.tot)) |> 
+  ggplot(aes(x = fecha, y = prom.mes, color = linea)) + 
+  geom_line()
+```
+ Se ve una caida en marzo de 2020 y una lenta recuperacion, no se ha llegado a niveles de 2019
+ otra grafica o tabla y conclusiones..
+
+h).
+
+```{r}
+bind_rows(dat_lin_A, dat_lin_B) |>
+  filter(pandemia == "no") |>
+  group_by(fecha, linea) |>
+  summarise(tot = mean(per.num, na.rm = TRUE)) |>
+  ggplot(aes(x= fecha, y = tot)) + 
+  geom_line() +
+  facet_grid(rows = vars(linea), scales = "free") +
+  labs(title = "Antes de la pandemia")
+```
+
+para antes de la pandemia la linea a y b tuvieron un comportamiento muy similar
+
+se ve que es estacionaria alrededor de una media, ademas, en la ultima semana hay una baja en la afluencia muy probablemente a causa del covid
+
+```{r}
+bind_rows(dat_lin_A, dat_lin_B) |>
+  filter(pandemia == "si") |>
+  group_by(fecha, linea) |>
+  summarise(tot = mean(per.num, na.rm = TRUE)) |>
+  ggplot(aes(x= fecha, y = tot)) + 
+  geom_line() +
+  facet_grid(rows = vars(linea), scales = "free") +
+  labs(title = "Antes de la pandemia")
+```
+
+```{r}
+dat_lin_A |>
+  filter(pandemia == "si") |>
+  group_by(fecha) |>
+  summarise(tot = mean(per.num, na.rm = TRUE)) |>
+  ggplot(aes(x= fecha, y = tot)) + geom_line()
+```
+
+en esta serie de tiempo se ve una recuperacion en ambas lineas (a y b), no es estacionaria ya que se ve una clara tendencia de crecimiento positivo no lineal, .... .
+
+i).
+
+regresion con lm para dos dataset: antes y despues de la pandemia
+
+puede ser con las covariables: indicadora dia de la semana (lunes, martes etc), mes, hora? 
+
+son 4 modelos: 
+antes pandemia linea a 
+antes pandemia linea a 
+despues pandemia linea b
+despues pandemia linea b 
+
+contrastar, dar una interpretación del summary del model
+
+graficar el modelo vs real
+
+```{r}
+dat_lin_A |>
+  filter(pandemia == "si") |>
+  mutate(fecha.hora = fecha + hora) |>
+  ggplot(aes(x = fecha.hora, y = per.num)) + geom_line()
 ```
