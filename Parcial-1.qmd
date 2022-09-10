@@ -65,7 +65,6 @@ metro.cols <- c(
 colnames(data_19) <- metro.cols
 colnames(data_20) <- metro.cols
 colnames(data_21) <- metro.cols
-dim(data_20)
 ```
 
 ```{r}
@@ -98,16 +97,17 @@ datos_juntos$fecha <- datos_juntos$fecha |> as_date()
 ```{r}
 data <- pivot_longer(datos_juntos, cols = ends_with(":00"), names_to = "hora", values_to = "per.num")
 
+data$hora <- hm(data$hora)
 data$dia <- day(data$fecha)
 data$dia.sem <- weekdays(data$fecha)
 data$sem <- week(data$fecha)
 data$mes <- month(data$fecha)
 data$anio <- year(data$fecha)
-data$hora <- hm(data$hora)
-
 ```
 
-Dimensiones son 228980 filas y 10 columnas
+Dimensiones son 228980 filas y 10 columnas.
+
+d\)
 
 ```{r}
 data$linea <- data$linea |> tolower() 
@@ -119,25 +119,42 @@ dat_lin_B <- data %>% filter(linea == "línea b")
 dat_lin_A |> arrange(fecha, hora) |> head(5) 
 ```
 
-dimensiones linea A = 21860 x 10
-dimensiones linea B = 21860 x 10
+Las dimensiones de los datos de la linea A son 21860 filas y 10 columnas.
+
+Las dimensiones de los datos de la linea B son 21860 filas y 10 columnas.
+
+e).
+
+El 23 de Marzo de 2020 el Gobierno de Colombia expidió el Decreto 457 para el período de aislamiento preventivo obligatorio a causa del virus del COVID-19.
 
 ```{r}
+dat_lin_A <- dat_lin_A %>%
+  mutate(pandemia = if_else(fecha < dmy("23-03-2020"), "no", "si"))
+
+
 dat_lin_A %>%
-  filter(fecha < dmy("23-03-2020")) %>%
-  group_by(dia.sem) %>%
-  summarise(promedio = mean(per.num, na.rm=TRUE))
+  group_by(dia.sem, hora, pandemia) %>%
+  summarise(promedio = mean(per.num, na.rm = TRUE)) %>%
+  ggplot() + 
+  geom_line(aes(x = as_datetime(hora), y = promedio, color = dia.sem)) +
+  scale_x_datetime(breaks = "1 hour", date_labels =  "%H:%M") + facet_grid(cols = vars(pandemia))
 
 dat_lin_A %>%
   filter(fecha > dmy("23-03-2020")) %>%
-  group_by(dia.sem) %>%
-  summarise(promedio = mean(per.num, na.rm=TRUE))
+  group_by(dia.sem, hora) %>%
+  summarise(promedio = mean(per.num, na.rm = TRUE)) %>%
+  ggplot() + 
+  geom_line(aes(x = as_datetime(hora), y = promedio, color = dia.sem)) +
+  scale_x_datetime(breaks = "1 hour", date_labels =  "%H:%M")
 ```
 
+f).
+
 ```{r}
-#f.
-lin.a <- dat_lin_A |> filter(!is.na(per)) |> group_by(fecha) |> summarise(a = sum(per))
+#
+lin.a <- dat_lin_A |> 
+  group_by(fecha) |> 
+  summarise(a = sum(per.num, na.rm=TRUE))
 
 lin.a |> ggplot(aes(x = fecha, y = a)) + geom_line()
 ```
-
