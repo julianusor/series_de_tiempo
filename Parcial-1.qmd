@@ -1,0 +1,143 @@
+---
+title: "Parcial 1"
+author: "Julián Úsuga Ortiz"
+format: pdf
+editor: visual
+---
+
+# 1.
+
+Considere el proceso estocástico dado por:
+
+$$
+X_t = w_{t-2} + 0.5w_{t-1} + 2w_t+0.5w_{t+1} + w_{t+2}
+$$
+
+donde los $w_t$ son independientes con media $0$ y varianza $\sigma_w^2 = 4.8$.
+
+# 3.
+
+```{r}
+library(readxl)
+library(tidyverse)
+library(lubridate)
+
+data_19 <- read_excel("data/Afluencia_Metro_2019.xlsx",
+                      range = "A4:W3566",
+                      col_names = FALSE)
+data_20 <- read_excel("data/Afluencia_Metro.xlsx",
+                      range = "A4:W3767",
+                      col_names = FALSE)
+data_21 <- read_excel("data/Afluencia_2021.xlsx",
+                      range = "A4:W4125",
+                      col_names = FALSE)
+
+
+```
+
+```{r}
+metro.cols <- c(
+  "fecha",
+  "linea",
+  "04:00",
+  "05:00",
+  "06:00",
+  "07:00",
+  "08:00",
+  "09:00",
+  "10:00",
+  "11:00",
+  "12:00",
+  "13:00",
+  "14:00",
+  "15:00",
+  "16:00",
+  "17:00",
+  "18:00",
+  "19:00",
+  "20:00",
+  "21:00",
+  "22:00",
+  "23:00",
+  "per.dia.tot"
+) 
+
+colnames(data_19) <- metro.cols
+colnames(data_20) <- metro.cols
+colnames(data_21) <- metro.cols
+dim(data_20)
+```
+
+```{r}
+
+```
+
+a\)
+
+Las dimensiones de los datos de 2019 son 3563 filas y 23 columnas.
+
+Las dimensiones de los datos de 2020 son 3764 filas y 23 columnas.
+
+Las dimensiones de los datos de 2021 son 4122 filas y 23 columnas.
+
+b\)
+
+```{r}
+datos_juntos <- bind_rows(data_19, data_20, data_21)
+rm(data_19, data_20, data_21)
+```
+
+Las dimensiones de los datos_juntos son 11449 filas y 23 columnas.
+
+c\)
+
+```{r}
+datos_juntos$fecha <- datos_juntos$fecha |> as_date()
+```
+
+```{r}
+data <- pivot_longer(datos_juntos, cols = ends_with(":00"), names_to = "hora", values_to = "per.num")
+
+data$dia <- day(data$fecha)
+data$dia.sem <- weekdays(data$fecha)
+data$sem <- week(data$fecha)
+data$mes <- month(data$fecha)
+data$anio <- year(data$fecha)
+data$hora <- hm(data$hora)
+
+```
+
+Dimensiones son 228980 filas y 10 columnas
+
+```{r}
+data$linea <- data$linea |> tolower() 
+dat_lin_A <- data %>% filter(linea == "línea a")
+dat_lin_B <- data %>% filter(linea == "línea b")
+```
+
+```{r}
+dat_lin_A |> arrange(fecha, hora) |> head(5) 
+```
+
+dimensiones linea A = 21860 x 10
+dimensiones linea B = 21860 x 10
+
+```{r}
+dat_lin_A %>%
+  filter(fecha < dmy("23-03-2020")) %>%
+  group_by(dia.sem) %>%
+  summarise(promedio = mean(per.num, na.rm=TRUE))
+
+dat_lin_A %>%
+  filter(fecha > dmy("23-03-2020")) %>%
+  group_by(dia.sem) %>%
+  summarise(promedio = mean(per.num, na.rm=TRUE))
+```
+
+```{r}
+#f.
+lin.a <- dat_lin_A |> filter(!is.na(per)) |> group_by(fecha) |> summarise(a = sum(per))
+
+lin.a |> ggplot(aes(x = fecha, y = a)) + geom_line()
+```
+
