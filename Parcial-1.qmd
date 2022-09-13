@@ -1,11 +1,33 @@
 ---
 title: "Parcial 1"
 author: "Julián Úsuga Ortiz - Ivan Santiago Rojas Martinez"
+execute:
+  echo: false
+  warning: false
 format: pdf
 editor: visual
 ---
 
-# 1.
+El código puede verse en el siguiente [repositorio](https://github.com/julianusor/series_de_tiempo).
+
+```{r}
+dias <- c("Monday" = "Lun",
+          "Tuesday" = "Mar",
+          "Wednesday" = "Mie",
+          "Thursday" = "Jue",
+          "Friday" = "Vie",
+          "Saturday" = "Sab",
+          "Sunday" = "Dom")
+library(readxl)
+library(tidyverse)
+library(lubridate)
+library(knitr)
+library(xtable)
+```
+
+\renewcommand{\arraystretch}{0.6}
+
+# Punto 1.
 
 Sea $X_t$ el proceso estocástico dado por:
 
@@ -15,12 +37,204 @@ $$
 
 donde los $w_t$ son independientes con media $0$ y varianza $\sigma_w^2 = 4.8$.
 
+### a)  
+
+```{=tex}
+\begin{align*}
+    E[X_t] & = E[w_{t-2} + 0.5w_{t-1} + 2w_t+0.5w_{t+1} + w_{t+2}] \\
+      & = 0
+\end{align*}
+```
+
+```{=tex}
+\begin{align*}
+Var[X_t] & 
+  = Var[w_{t-2} + 0.5w_{t-1} + 2w_t+0.5w_{t+1} + w_{t+2}] \\
+& = Var[w_{t-2}] + 0.5^2Var[w_{t-1}] + 2^2Var[w_t]+0.5^2Var[w_{t+1}] + Var[w_{t+2}] \\
+& = 4.8 + 0.25 * 4.8 + 4 * 4.8 + 0.25 * 4.8 + 4.8 \\
+& = 31.2
+\end{align*}
+```
+
+### b)  
+
+-   k = 0 \begin{align*}
+    \gamma(0) & = Cov[X_t, X_t] \\
+    & = Var[X_t] = 31.2
+    \end{align*}
+
+-   k = 1 \begin{align*}
+    \gamma(1) & = Cov[X_t, X_{t + 1}] \\
+    & = Cov[w_{t-2} + 0.5w_{t-1} + 2w_t + 0.5w_{t+1} + w_{t+2},
+    w_{t-1} + 0.5w_{t} + 2w_{t+1}+0.5w_{t+2} + w_{t+3}] \\
+    & = Cov[w_{t-2}, X_{t + 1}] + Cov[0.5w_{t-1}, w_{t-1}] + \\
+    &\hphantom{=i} Cov[2w_t, 0.5w_{t}] + Cov[0.5w_{t+1}, 2w_{t+1}] + \\
+    &\hphantom{i=} Cov[w_{t+2}, 0.5w_{t+2}] \\
+     & = 0 + 0.5 * 4.8 + \\
+    &\hphantom{=i} 2 * 0.5 * 4.8 + 2 * 0.5 * 4.8 + \\
+    &\hphantom{i=} 0.5 * 4.8 \\
+    & = 14.4
+    \end{align*}
+
+-   k = 2 \begin{align*}
+    \gamma(2) & = Cov[X_t, X_{t + 2}] \\
+    & = Cov[w_{t-2} + 0.5w_{t-1} + 2w_t +     0.5w_{t+1} + w_{t+2},
+          w_{t} +   0.5w_{t+1} + 2w_{t+2} + 0.5w_{t+3} +   w_{t+5}] \\
+    & =            Cov[w_{t-2}, X_{t + 2}] + Cov[0.5w_{t-1}, X_{t + 2}] + \\
+    &\hphantom{=i} Cov[2w_t, w_{t}] +      Cov[0.5w_{t+1}, 0.5w_{t+1}] + \\
+    &\hphantom{i=} Cov[w_{t+2}, 2w_{t+2}] \\
+     & =                  0 +   0 + \\
+    &\hphantom{=i} 2 * 4.8 +   0.5^2 * 4.8 + \\
+    &\hphantom{i=} 2 * 4.8 \\
+    & = 20.4
+    \end{align*}
+
+-   k = 3 \begin{align*}
+    \gamma(-2) & = Cov[X_t, X_{t + 3}] \\
+    & = Cov[w_{t-2} + 0.5w_{t-1} + 2w_{t} +   0.5w_{t+1} + w_{t+2},
+          w_{t+1} + 0.5w_{t+2} + 2w_{t+3} + 0.5w_{t+4} + w_{t+5}] \\
+    & =            Cov[w_{t-2} + 0.5w_{t-1} + 
+                     2w_{t}, w_{t+1} + 0.5w_{t+2} + 
+                     2w_{t+3} + 0.5w_{t+4} + w_{t+5}] + 
+                 Cov[0.5w_{t+1}, w_{t+1}] + \\
+    &\hphantom{=i} Cov[w_{t+2}, 0.5w_{t+2}] \\
+     & =           0 +   0.5 * 4.8 + \\
+    &\hphantom{=i} 0.5 * 4.8 \\   
+    & = 4.8
+    \end{align*}
+
+-   k = 4 \begin{align*}
+    \gamma(4) & = Cov[X_t, X_{t + 4}] \\
+    & = Cov[w_{t-2} + 0.5w_{t-1} + 2w_{t} +   0.5w_{t+1} + w_{t+2},
+          w_{t+2} + 0.5w_{t+3} + 2w_{t+4} + 0.5w_{t+5} + w_{t+6}] \\
+    & =            Cov[w_{t-2} + 0.5w_{t-1} + 2w_{t} +   0.5w_{t+1}, 
+                     w_{t+2} + 0.5w_{t+3} + 2w_{t+4} + 0.5w_{t+5} + w_{t+6}] + \\
+    &\hphantom{=i} Cov[w_{t+2},  w_{t+2}] \\
+     & =           0 + 4.8\\
+    & = 4.8
+    \end{align*}
+
+
+
+```{=tex}
+\begin{align*}
+\text{Se puede probar que } \gamma(i) = \gamma(-i) \text{ para } i = 1, 2, 3, 4 \\
+\text{Y que } \gamma(k) = 0 \text{ para } |k| \ge 5  
+\end{align*}
+```
+
+Con los valores anteriores y reemplazando, la ACF está dada por \begin{equation}
+\rho(k)=
+    \begin{cases}
+        1 & \text{si } k = 0 \\
+        0.4615385 & \text{si } |k| = 1 \\
+        0.6538462 & \text{si } |k| = 2 \\
+        0.1538462 & \text{si } |k| = 3 \\
+        0.1538462 & \text{si } |k| = 4 \\
+        0 & \text{si } |k| \ge 5
+    \end{cases}
+\end{equation}
+
+y la PACF por: 
+```{=tex}
+\begin{align*}
+\Phi_{0,0} = 0 \ & \  \Phi_{1,1} = 0.4615385 \ & \  \Phi_{2,2} = 0.5601504\\
+\Phi_{3,3} = -0.4396252 \ & \  \Phi_{4,4} = -0.3143931 \ & \  \Phi_{5,5} = 0.4101445\\
+\end{align*}
+```
+\text{ A continuación los valores de la PACF desde el Lag 6 hasta el 20: }
+0.1509651, -0.3730572, -0.0335281, 0.3285716, -0.0527841, -0.2773402, 0.1148472, 0.2206910, -0.1560573, -0.1608494, 0.1782139, 0.1010639, -0.1825514, -0.0455188, 0.1705496
+
+Como $\Phi_{1,1} > 0$ y el modelo es MA entonces el PACF va a oscilar alrededor del 0 de forma senoidal.
+
+Las ACF y PACF se pueden ver en la siguiente gráfica:
+
+```{r}
+#| layout: [[45, 45]]
+
+p <- function(k) {
+  if (k > 4) {
+    return(0)
+  }
+  return(c(1, 0.4615385, 0.6538462, 0.1538462, 0.1538462)[k + 1])
+}
+
+calcular <- FALSE
+
+if (calcular) {
+  phi <- c(0.4615385) # phi 11
+  Phi <- function(n, k) {
+    if (n == k) {
+      return(phi[n])
+    }
+    else{
+      return(Phi(n - 1, k) - phi[n] * Phi(n - 1, n - k))
+      
+    }
+  }
+  
+  for (n in 2:20) {
+    sn <- 0
+    sd <- 0
+    for (k in 1:(n - 1)) {
+      sn <- sn + Phi(n - 1, k) * p(n - k)
+      sd <- sd + Phi(n - 1, k) * p(k)
+    }
+    phi[n] <- (p(n) - sn) / (1 - sd)
+  }
+}
+
+phi <- c(0.4615385, 0.5601504, -0.43962522, -0.31439315, 0.41014450, 0.1509651, -0.3730572, -0.0335281, 0.3285716, -0.0527841, -0.2773402, 0.1148472, 0.2206910, -0.1560573, -0.1608494, 0.1782139, 0.1010639, -0.1825514, -0.0455188, 0.1705496)
+
+
+acf.teorico <- c(1, 0.4615385, 0.6538462, 0.1538462, 0.1538462, 0, 0)
+lag <- as.factor(0:6)
+
+data.frame(x = lag, y = acf.teorico) |> 
+  ggplot(aes(x = x, y = y)) + 
+  geom_col(width = 0.1) + 
+  labs(title = "ACF teórica de X_t", x = "Lag", y = "") 
+
+data.frame(x = as.factor(1:20), y = phi) |> 
+  ggplot(aes(x = x, y = y)) + 
+  geom_col(width = 0.1) + 
+  labs(title = "ACF teórica de X_t", x = "Lag", y = "") 
+```
+
+
+### c) y d)  
+
+Simulación del proceso estocástico $X_t$ y sus ACF y PACF muestrales.
+
+```{r}
+#| layout: [[30, 30, 30]]
+noise <- rnorm(1000, mean = 0, sd = sqrt(4.8))
+n <- 850
+X <- c()
+for (i in 2:202) {
+  x <- c(noise[i-2] + 0.5*noise[i-1] + 2*noise[i] + 0.5*noise[i+1] + noise[i+2])
+  X <- c(X, x)
+}
+
+t <- 1:200
+data.frame(t = t, x = X) |> 
+  ggplot(aes(x = t, y = x)) + 
+  geom_line() + 
+  labs(title = "Proceso estocástico simulado X_t", x = "Tiempo (t)", y = "X_t")
+acf(X)
+pacf(X)
+```
+
+Al comparar las ACF como las PACF muestrales con las teóricas se puede ver una similitud grande, además, se puede ver que la serie se corta después del Lag $3$ en la ACF y se reduce infinitamente de forma senoidal en la PACF, propiedades de un modelo MA(3).
+
+\newpage
+
 # 2.
 
-Sea $X_t$ el proceso estocastico estacionario dado por: $$
+Sea $X_t$ el proceso estocástico estacionario dado por: $$
 X_t = 3.1 + 0.9X_{t−1} − 0.6X_{t−2} + w_t$$ donde $w_t$ es ruido blanco gaussiano con media $0$ y varianza $\sigma_w^2 = 6.2$.
 
-## a).
+### a)
 
 ```{=tex}
 \begin{equation*}
@@ -33,7 +247,7 @@ X_t = 3.1 + 0.9X_{t−1} − 0.6X_{t−2} + w_t$$ donde $w_t$ es ruido blanco ga
 \end{split}
 \end{equation*}
 ```
-## b).
+### b)
 
 ```{=tex}
 \begin{equation*}
@@ -64,9 +278,17 @@ Dividiendo por $\gamma(0)$
 1&-0.9\rho(1)+0.6\rho(2) = \frac{\sigma^{2}_w}{\rho(0)} \\
 \sigma^{2}_x &= \gamma(0) = \frac{\sigma^{2}_w}{1-0.9\rho(1) + 0.6\rho(2)}\\
 \gamma(1) &= cov[X_{t-1}, 3.1 + 0.9X_{t-1}-0.6X_{t-2} + w_t]\\
-&= cov[X_{t-1}, X_{t-1}]0.9-0.6cov[X_{t-1}, X_{t-2}] \\ 
+&= cov[X_{t-1}, X_{t-1}]0.9-0.6cov[X_{t-1}, X_{t-2}] \\
 &= \gamma(0)0.9-0.6\gamma(1) \\
 1.6\gamma(1) &= \gamma(0)*0.9 \\
+\end{split}
+\end{equation*}
+```
+
+
+```{=tex}
+\begin{equation*}
+\begin{split}
 \gamma(1) &= \gamma(0) \frac{0.9}{1.6} \\
 \rho(1) &= \frac{\gamma(0) 0.9/1.6}{\gamma(0)} = \frac{0.9}{1.6} \\ 
 \gamma(2) &= cov[X_{t-2}, 3.1 + 0.9X_{t-1}-0.6X_{t-2} + w_t] \\
@@ -87,19 +309,30 @@ Por lo que:
 \end{split}
 \end{equation*}
 ```
-# 3.
 
-## Paquetes usados:
+### c) y d)
 
-```{r,  warning = FALSE, message = FALSE}
-library(readxl)
-library(tidyverse)
-library(lubridate)
-library(knitr)
-library(xtable)
+Al comparar las ACF y PACF muestrales con las ACF y PACF teóricas se observa una gran similitud, además se observa una caída de forma senoidal en la ACF y un corte después del Lag p = $3$, caracteristicas de un proceso autoregresivo de orden 2. 
+
+```{r}
+#| layout: [[45, 45], [32, 32, 32]]
+data.frame(x = as.factor(0:20), y = ARMAacf(ar=c(0.9,-0.6), ma=0, 20, pacf=FALSE)) |> 
+  ggplot(aes(x = x, y = y))+ 
+  geom_col(width = 0.1) + labs(x = "Lag", title = "ACF teórica del proceso X_t")
+
+data.frame(x = as.factor(1:20), y = ARMAacf(ar=c(0.9,-0.6), ma=0, 20, pacf=TRUE)) |> 
+  ggplot(aes(x = x, y = y))+ 
+  geom_col(width = 0.1) + labs(x = "Lag", title = "PACF teórica del proceso X_t")
+
+X <- arima.sim(model = list(ar = c(0.9, -0.6)), n = 180)
+data.frame(x = 1:180, y = X) |> ggplot(aes(x = x, y = y)) + geom_line() + labs(x = "Tiempo (t)", title = "Simulación del proceso X_t")
+
+acf(X)
+pacf(X)
 ```
 
-## Lectura de la Base de datos:
+\newpage
+# 3.
 
 ```{r, message=FALSE}
 data_19 <- read_excel("data/Afluencia_Metro_2019.xlsx",
@@ -111,7 +344,6 @@ data_20 <- read_excel("data/Afluencia_Metro.xlsx",
 data_21 <- read_excel("data/Afluencia_2021.xlsx",
                       range = "A4:W4125",
                       col_names = FALSE)
-
 ```
 
 ```{r, echo = FALSE}
@@ -147,7 +379,7 @@ colnames(data_20) <- metro.cols
 colnames(data_21) <- metro.cols
 ```
 
-a).
+### a)
 
 Las dimensiones de los datos de 2019 son 3563 filas y 23 columnas.
 
@@ -155,7 +387,7 @@ Las dimensiones de los datos de 2020 son 3764 filas y 23 columnas.
 
 Las dimensiones de los datos de 2021 son 4122 filas y 23 columnas.
 
-b).
+### b)
 
 ```{r}
 datos_juntos <- bind_rows(data_19, data_20, data_21)
@@ -167,15 +399,17 @@ rm(data_19, data_20, data_21)
 
 Las dimensiones de los datos_juntos son 11449 filas y 23 columnas.
 
-c).
+### c)
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, lectura1}
 datos_juntos$fecha <- datos_juntos$fecha |> as_date()
 ```
 
 ```{r}
-data <- pivot_longer(datos_juntos, cols = ends_with(":00"), 
-                     names_to = "hora", values_to = "per.num")
+data <- pivot_longer(datos_juntos, 
+                     cols = ends_with(":00"), 
+                     names_to = "hora", 
+                     values_to = "per.num")
 
 data$hora <- hm(data$hora)
 data$dia <- day(data$fecha)
@@ -183,11 +417,21 @@ data$dia.sem <- weekdays(data$fecha)
 data$sem <- week(data$fecha)
 data$mes <- month(data$fecha)
 data$anio <- year(data$fecha)
+
+data <- data |> mutate(dia.sem = case_when(dia.sem == 'Monday' ~ 'Lun',
+                           dia.sem == 'Tuesday' ~ 'Mar',
+                           dia.sem == 'Wednesday' ~ 'Mie',
+                           dia.sem == 'Thursday' ~ 'Jue',
+                           dia.sem == 'Friday' ~ 'Vie',
+                           dia.sem == 'Saturday' ~ 'Sab',
+                           dia.sem == 'Sunday' ~ 'Dom',
+                           TRUE ~ '...'))
+data$dia.sem <- factor(data$dia.sem, levels = c("Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"))
 ```
 
 Las dimensiones del data frame son 228980 filas y 10 columnas.
 
-d).
+### d)
 
 ```{r, echo = FALSE}
 data$linea <- data$linea |> tolower() 
@@ -196,215 +440,218 @@ dat_lin_B <- data |> filter(linea == "línea b")
 ```
 
 ```{r, echo = FALSE}
-dat_lin_A |> arrange(fecha, hora) |> head(5) %>% kable(., caption = "Linea A")
+dat_lin_A |> arrange(fecha, hora) |> head(5) %>%  kable(., digits = 5,  caption = "Línea A")
 ```
 
-Las dimensiones de los datos de la linea A son 21860 filas y 10 columnas.
+Las dimensiones de los datos de la línea A son 21860 filas y 10 columnas.
 
 ```{r, echo = FALSE}
-dat_lin_B |> arrange(fecha, hora) |> head(5) %>% kable(., caption = "Linea B")
+tbl <- dat_lin_B |> arrange(fecha, hora) |> head(5)
+kable(tbl, caption = "Linea B",digits = 5)
 ```
 
-Las dimensiones de los datos de la linea B son 21860 filas y 10 columnas.
+Las dimensiones de los datos de la línea B son 21860 filas y 10 columnas.
 
-e).
+### e)
 
 El 23 de Marzo de 2020 el Gobierno de Colombia expidió el Decreto 457 para el período de aislamiento preventivo obligatorio a causa del virus del COVID-19.
 
-```{r, echo = FALSE}
+```{r}
+#| fig-align: center
+
+
 dat_lin_A <- dat_lin_A |>
   mutate(pandemia = if_else(fecha < dmy("23-03-2020"), "no", "si"))
 dat_lin_B <- dat_lin_B |>
   mutate(pandemia = if_else(fecha < dmy("23-03-2020"), "no", "si"))
 ```
 
-```{r, echo = FALSE, message=FALSE, out.width="115%"}
+```{r}
+#| fig-width: 8
+#| fig-height: 5
 facet.names <- c(
-  'si'="Despues de la pandemia",
-  'no'="Antes de la pandemia"
+  'si'="Antes de la pandemia",
+  'no'="Después de la pandemia",
+  'línea a' = 'Línea A',
+  'línea b' = 'Línea B'
 )
 
-dat_lin_A |>
-  group_by(dia.sem, hora, pandemia) |>
+bind_rows(dat_lin_A, dat_lin_B) |>
+  group_by(dia.sem, hora, pandemia, linea) |>
   summarise(promedio = mean(per.num, na.rm = TRUE)) |>
   ggplot() +
   geom_line(aes(x = as_datetime(hora), y = promedio, color = dia.sem)) +
-  scale_x_datetime(breaks = "1 hour", date_labels =  "%H:00") + 
-  facet_grid(cols = vars(pandemia), labeller=as_labeller(facet.names)) +
-  labs(title = "Promedio de pasajeros por hora para la linea A", 
+  scale_x_datetime(breaks = "2 hour", date_labels =  "%H") + 
+  facet_grid(cols = vars(pandemia), rows = vars(linea),
+             labeller=as_labeller(facet.names), scales = "free") +
+  labs(title = "Promedio de pasajeros por hora para la línea A", 
        x = "Hora de servicio", 
        y = "Promedio de pasajeros") +
-  scale_color_discrete(name = "Dia de la\nSemana")+
-  theme(axis.text.x=element_text(angle=90))
+  scale_color_discrete(name = "Dia de la\nSemana") + 
+  theme_light() +
+  theme(axis.text.x=element_text(angle=45))
 ```
 
-Se puede observar que después de la pandemia se disminuyo aproximadamente a la mitad la afluencia de pasajeros en la **linea A** y durante las semanas el comportamiento es muy similar para antes de la pandemia y despues de la pandemia.
+Se puede observar que después de la pandemia se disminuyó aproximadamente a la mitad la afluencia de pasajeros en la **línea A** y durante las semanas el comportamiento es muy similar para antes de la pandemia y después de la pandemia.
 
-Los dias con menor a fluencia de pasajeros son los dias **sabado** y **domingo** 
+Los dias con menor afluencia de pasajeros son los dias **sábado** y **domingo**
 
-
-```{r, echo = FALSE, message=FALSE, out.width="115%"}
-facet.names <- c(
-  'si'="Despues de la pandemia",
-  'no'="Antes de la pandemia"
-)
-
-dat_lin_B |>
-  group_by(dia.sem, hora, pandemia) |>
-  summarise(promedio = mean(per.num, na.rm = TRUE)) |>
-  ggplot() +
-  geom_line(aes(x = as_datetime(hora), y = promedio, color = dia.sem)) +
-  scale_x_datetime(breaks = "1 hour", date_labels =  "%H:00") + 
-  facet_grid(cols = vars(pandemia), labeller=as_labeller(facet.names)) +
-  labs(title = "Promedio de pasajeros por hora para la linea B", 
-       x = "Hora de servicio", 
-       y = "Promedio de pasajeros") +
-  scale_color_discrete(name = "Dia de la\nSemana")+
-  theme(axis.text.x=element_text(angle=90))
-```
-
-Se puede observar que después de la pandemia se disminuyo aproximadamente a la mitad la afluencia de pasajeros en la **linea B** y durante las semanas el comportamiento es muy similar para antes de la pandemia y despues de la pandemia.
-Los dias con menor a fluencia de pasajeros son los dias **sabado** y **domingo** 
-
-
+Luego, se puede observar que después de la pandemia se disminuyó aproximadamente a la mitad la afluencia de pasajeros en la **línea B** y durante las semanas el comportamiento es muy similar para antes de la pandemia y después de la pandemia. Los dias con menor afluencia de pasajeros son los dias **sábado** y **domingo**
 
 ```{r, include = FALSE}
-dat_lin_A %>% filter(., pandemia == "no") %>% 
-  group_by(dia.sem, hora) %>% 
+dat_lin_A |> filter(pandemia == "no") |> 
+  group_by(dia.sem, hora) |> 
   summarise(promedio = mean(per.num, na.rm=TRUE))
 ```
 
-f).
+### f)
 
-```{r, include = FALSE, eval = FALSE}
+```{r, warning= FALSE, message = FALSE}
 lin.a <- dat_lin_A |> 
   group_by(fecha) |> 
-  summarise(dia = day(fecha), per.dia.tot = sum(per.num, na.rm=TRUE))
-
-
+  summarise(per.dia.tot = sum(per.num, na.rm=TRUE))
 lin.b <- dat_lin_B |> 
   group_by(fecha) |> 
   summarise(per.dia.tot = sum(per.num, na.rm=TRUE))
 
-# falta añadir día, día de la semana, semana, mes, año
-# para lin.a y lin.b
-```
-
-```{r, warning= FALSE, message = FALSE}
-lin.a <- dat_lin_A %>% 
-  group_by(fecha) %>% 
+lin.a <- lin.a |>
+  group_by(fecha) |> 
   summarise(dia = day(fecha), dia.sem = weekdays(fecha), 
-            sem = week(fecha), mes = month(fecha), anio = year(fecha), 
-            per.dia.tot = sum(per.num, na.rm = TRUE))
-
-lin.b <- dat_lin_B %>% 
-  group_by(fecha) %>% 
+            sem = week(fecha), mes = month(fecha), anio = year(fecha), per.dia.tot = per.dia.tot)
+lin.a <- lin.a %>% mutate(dia.sem = case_when(dia.sem == 'Monday' ~ 'Lun',
+                           dia.sem == 'Tuesday' ~ 'Mar',
+                           dia.sem == 'Wednesday' ~ 'Mie',
+                           dia.sem == 'Thursday' ~ 'Jue',
+                           dia.sem == 'Friday' ~ 'Vie',
+                           dia.sem == 'Saturday' ~ 'Sab',
+                           dia.sem == 'Sunday' ~ 'Dom',
+                           TRUE ~ '...'))
+lin.a$dia.sem <- factor(lin.a$dia.sem, levels = c("Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"))
+lin.b <- lin.b |> 
+  group_by(fecha) |> 
   summarise(dia = day(fecha), dia.sem = weekdays(fecha), 
-            sem = week(fecha), mes = month(fecha), anio = year(fecha), 
-            per.dia.tot = sum(per.num, na.rm = TRUE))
+            sem = week(fecha), mes = month(fecha), anio = year(fecha), per.dia.tot = per.dia.tot)
+
+lin.b <- lin.b %>% mutate(dia.sem = case_when(dia.sem == 'Monday' ~ 'Lun',
+                           dia.sem == 'Tuesday' ~ 'Mar',
+                           dia.sem == 'Wednesday' ~ 'Mie',
+                           dia.sem == 'Thursday' ~ 'Jue',
+                           dia.sem == 'Friday' ~ 'Vie',
+                           dia.sem == 'Saturday' ~ 'Sab',
+                           dia.sem == 'Sunday' ~ 'Dom',
+                           TRUE ~ '...'))
+lin.b$dia.sem <- factor(lin.b$dia.sem, levels = c("Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"))
 ```
 
 ```{r, echo = FALSE}
-kable(head(lin.a), caption = "Linea A")
+kable(head(lin.a), caption = "Linea A",digits = 5)
 ```
 
 ```{r, echo = FALSE}
-kable(head(lin.b), caption = "Linea B")
+kable(head(lin.b), caption = "Linea B", digits = 5)
 ```
 
-g).
+### g)
 
-```{r, echo = FALSE, message=FALSE, warning=FALSE}
+```{r}
+#| fig-align: center
+#| fig-height: 2.2
 lin.a$linea <- "a"
 lin.b$linea <- "b"
 
 bind_rows(lin.a, lin.b) |> 
   ggplot(aes(x = fecha, y = per.dia.tot, color = linea)) +
   ylab("Personas")+
-  labs(title = "Total de personas por dia")+
+  labs(title = "Total de personas por dia", x = "Fecha", y = "Total de personas") +
   geom_line()
 ```
-Se ve una caída**(cisne negro)** en marzo de 2020 y una lenta recuperación, no se ha llegado a niveles de 2019.
 
-```{r, echo = FALSE, warning=FALSE, message=FALSE}
+Se ve una caída**(cisne negro)** en Marzo de 2020 y una lenta recuperación, no se ha llegado a niveles de 2019.
+
+```{r}
+#| fig-align: center
+#| fig-height: 2.2
+
 # Esto es promedio por semana
 bind_rows(lin.a, lin.b) |> 
   group_by(fecha = floor_date(fecha, unit = "week") ,linea) |> 
   summarise(prom.mes = mean(per.dia.tot)) |> 
   ggplot(aes(x = fecha, y = prom.mes, color = linea)) + 
-  ylab("Personas")+
+  labs(y = "Personas", x = "Fecha")+
+  
   labs(title = "Promedio de personas por semana")+
   geom_line()
 ```
 
-Se observa que la linea  que cuenta con mayor afluencia de pasajeros es la **linea A**.
+Se observa que la línea que cuenta con mayor afluencia de pasajeros es la **línea A**.
 
-h).
+### h)
 
-```{r, echo = FALSE, warning=FALSE, message=FALSE}
+```{r}
+#| fig-align: center
+
 bind_rows(dat_lin_A, dat_lin_B) |>
   filter(pandemia == "no") |>
   group_by(fecha, linea) |>
   summarise(tot = mean(per.num, na.rm = TRUE)) |>
   ggplot(aes(x= fecha, y = tot)) + 
   geom_line() +
-  facet_grid(rows = vars(linea), scales = "free") +
-  ylab("Promedio de personas")+
+  facet_grid(rows = vars(linea), labeller=as_labeller(facet.names), scales = "free") +
+  labs( y = "Promedio de personas", x = "Fecha")+
   labs(title = "Antes de la pandemia")
+
 ```
 
-Para antes de la pandemia la linea a y b tuvieron un comportamiento muy similar.
+Para antes de la pandemia la línea A y B tuvieron un comportamiento muy similar.
 
-Se ve que es estacionaria alrededor de una media, ademas, en la ultima semana hay una baja afluencia de personas en ambas lineas muy probablemente a causa del covid.
+Se ve que es estacionaria alrededor de una media, además, en la ultima semana hay una baja afluencia de personas en ambas líneas muy probablemente a causa del COVID-19.
 
-
-```{r, echo = FALSE,warning=FALSE, message=FALSE}
+```{r}
+#| fig-align: center
 bind_rows(dat_lin_A, dat_lin_B) |>
   filter(pandemia == "si") |>
   group_by(fecha, linea) |>
   summarise(tot = mean(per.num, na.rm = TRUE)) |>
   ggplot(aes(x= fecha, y = tot)) + 
   geom_line() +
-  facet_grid(rows = vars(linea), scales = "free") + 
-  ylab("Promedio de personas")+
-  labs(title = "Despues de la pandemia")
+  facet_grid(rows = vars(linea), labeller=as_labeller(facet.names), scales = "free") + 
+  labs(y = "Promedio de personas", x = "Fecha")+
+  labs(title = "Después de la pandemia")
 ```
 
-en esta serie de tiempo se ve una recuperación en ambas lineas (a y b), no es estacionaria ya que se ve una clara tendencia de crecimiento positivo no lineal.
+En esta serie de tiempo se ve una recuperación en ambas líneas (A y B), no es estacionaria ya que se ve una clara tendencia de crecimiento positivo no lineal.
+
+### i)
 
 
+Se plantea el siguiente modelo ya que en el análisis descriptivo se puede ver que semana a semana hay una tendencia, cuando se acerca el fin de semana hay una reducción
 
-i).
+Tambien se debe notar que las series para después de la pandemia no tiene una varianza constante, por lo que este comportamiento no es posible de capturar por un modelo de regresión lineal simple sin no antes hacer transformaciones a los datos.
 
-regresion con lm para dos dataset: antes y despues de la pandemia
+```{=tex}
+\begin{align*}
+\text{Numero Pasajeros = } & \beta_{0} + \beta_{dia.sem.Martes} I_{dia.sem.Martes} +\\
+& \beta_{dia.sem.Miercoles} I_{dia.sem.Miercoles} + \beta_{dia.sem.Jueves} I_{dia.sem.Jueves} +\\
+& \beta_{dia.sem.Viernes} I_{dia.sem.Viernes} + \beta_{dia.sem.Sabado} I_{dia.sem.Sabado} +\\
+& \beta_{dia.sem.Domingo} I_{dia.sem.Domingo} + \beta_{mes.1} I_{mes.1} +\\
+& \beta_{mes.2} I_{mes.2} + \beta_{mes.3} I_{mes.3} + \\
+& \beta_{mes.4} I_{mes.4} + \beta_{mes.5} I_{mes.5} +\\
+& \beta_{mes.6} I_{mes.6} + \beta_{mes.7} I_{mes.7} +\\
+& \beta_{mes.8} I_{mes.8} + \beta_{mes.9} I_{mes.9} + \\
+& \beta_{mes.10} I_{mes.10} +\beta_{mes.11} I_{mes.11} +\\
+&  \beta_{mes.12} I_{mes.12}\\
+\end{align*}
+```
 
-puede ser con las covariables: indicadora dia de la semana (lunes, martes etc), mes, hora?
-
-son 4 modelos: antes pandemia linea a antes pandemia linea a despues pandemia linea b despues pandemia linea b
-
-contrastar, dar una interpretación del summary del model
-
-graficar el modelo vs real
-
-
-
-## Modelo linea A antes de pandemia:
-
-
-
+#### Modelo lineal A antes de pandemia:
 
 ```{r}
+#| fig-align: center
 df.lin.A <- dat_lin_A |> filter(pandemia == "no")
-df.lin.A$dia.sem <- as.factor(df.lin.A$dia.sem)
+df.lin.A$dia.sem <- df.lin.A$dia.sem |> as.factor()
+df.lin.A$mes <- as.factor(df.lin.A$mes)
 
-acf(df.lin.A$per.dia.tot)
-pacf(df.lin.A$per.dia.tot)
-
-serie <- ts(df.lin.A$per.dia.tot, start = 2019, frequency = 12)
-decom <- decompose(serie)
-plot(decom)
-
-model.lin.A <- lm(per.dia.tot ~ dia.sem, data = df.lin.A)
+model.lin.A <- lm(per.dia.tot ~ fecha + dia.sem + mes, data = df.lin.A)
 kable(xtable(summary(model.lin.A)))
 
 
@@ -412,60 +659,45 @@ df.lin.A$pred <- predict(model.lin.A, newdata = df.lin.A)
 df.lin.A$per.dia.tot <- as.numeric(df.lin.A$per.dia.tot)
 df.lin.A$pred <- as.numeric(df.lin.A$pred)
 
-ajust <- df.lin.A %>% gather(key="Linea", value="Cantidad", per.dia.tot, pred)
+ajust <- df.lin.A |> gather(key="Linea", value="Cantidad", per.dia.tot, pred)
 
 
-ajust %>% ggplot(aes(x=fecha, y=Cantidad,
-col=Linea))+
-geom_line()
+p1 <- ajust |> ggplot(aes(x = fecha, y = Cantidad,
+                          col = Linea)) +
+  geom_line() + labs(title = "Linea A antes de la pandemia") + guides(color = "none")
 ```
 
-
-
-
-## Modelo linea A despues de pandemia:
+#### Modelo lineal A después de pandemia:
 
 ```{r}
-df.lin.A.p <- dat_lin_A |> filter(pandemia == "si")
-df.lin.A.p$dia.sem <- as.factor(df.lin.A.p$dia.sem)
+df.lin.A <- dat_lin_A |> filter(pandemia == "si")
+df.lin.A$dia.sem <- df.lin.A$dia.sem |> as.factor()
+df.lin.A$mes <- as.factor(df.lin.A$mes)
 
-acf(df.lin.A.p$per.dia.tot)
-pacf(df.lin.A.p$per.dia.tot)
+model.lin.A <- lm(per.dia.tot ~ fecha + dia.sem + mes, data = df.lin.A)
+kable(xtable(summary(model.lin.A)))
 
-serie <- ts(df.lin.A.p$per.dia.tot, start = 2019, frequency = 12)
-decom <- decompose(serie)
-plot(decom)
+df.lin.A$pred <- predict(model.lin.A, newdata = df.lin.A)
+df.lin.A$per.dia.tot <- as.numeric(df.lin.A$per.dia.tot)
+df.lin.A$pred <- as.numeric(df.lin.A$pred)
 
-model.lin.A.p <- lm(per.dia.tot ~ dia.sem, data = df.lin.A.p)
-kable(xtable(summary(model.lin.A.p)))
-
-
-df.lin.A.p$pred <- predict(model.lin.A.p, newdata = df.lin.A.p)
-df.lin.A.p$per.dia.tot <- as.numeric(df.lin.A.p$per.dia.tot)
-df.lin.A.p$pred <- as.numeric(df.lin.A.p$pred)
-
-ajust <- df.lin.A.p %>% gather(key="Linea", value="Cantidad", per.dia.tot, pred)
+ajust <- df.lin.A |> gather(key="Linea", value="Cantidad", per.dia.tot, pred)
 
 
-ajust %>% ggplot(aes(x=fecha, y=Cantidad,
-col=Linea))+
-geom_line()
+p2 <- ajust |> ggplot(aes(x = fecha, y = Cantidad,
+                    col = Linea)) +
+  geom_line()+ labs(title = "Linea A después de la pandemia") + guides(color = "none")
+
 ```
 
-## Modelo linea B antes de pandemia:
+#### Modelo lineal B antes de pandemia:
 
 ```{r}
 df.lin.B <- dat_lin_B |> filter(pandemia == "no")
 df.lin.B$dia.sem <- as.factor(df.lin.B$dia.sem)
+df.lin.B$mes <- as.factor(df.lin.B$mes)
 
-acf(df.lin.B$per.dia.tot)
-pacf(df.lin.B$per.dia.tot)
-
-serie <- ts(df.lin.B$per.dia.tot, start = 2019, frequency = 12)
-decom <- decompose(serie)
-plot(decom)
-
-model.lin.B <- lm(per.dia.tot ~ dia.sem, data = df.lin.B)
+model.lin.B <- lm(per.dia.tot ~ fecha + dia.sem + mes, data = df.lin.B)
 kable(xtable(summary(model.lin.B)))
 
 
@@ -473,28 +705,24 @@ df.lin.B$pred <- predict(model.lin.B, newdata = df.lin.B)
 df.lin.B$per.dia.tot <- as.numeric(df.lin.B$per.dia.tot)
 df.lin.B$pred <- as.numeric(df.lin.B$pred)
 
-ajust <- df.lin.B %>% gather(key="Linea", value="Cantidad", per.dia.tot, pred)
+ajust <- df.lin.B |> gather(key="Linea", value="Cantidad", per.dia.tot, pred)
 
 
-ajust %>% ggplot(aes(x=fecha, y=Cantidad,
-col=Linea))+
-geom_line()
+p3 <- ajust |> ggplot(aes(x = fecha, y = Cantidad,
+                    col = Linea)) +
+  geom_line()+ labs(title = "Linea B antes de la pandemia") + guides(color = "none")
+
 ```
 
-## Modelo linea B despues de pandemia: 
+#### Modelo lineal B después de pandemia:
 
 ```{r}
 df.lin.B.p <- dat_lin_B |> filter(pandemia == "si")
 df.lin.B.p$dia.sem <- as.factor(df.lin.B.p$dia.sem)
+df.lin.B.p$mes <- as.factor(df.lin.B.p$mes)
 
-acf(df.lin.B.p$per.dia.tot)
-pacf(df.lin.B.p$per.dia.tot)
+model.lin.B.p <- lm(per.dia.tot ~ fecha + dia.sem + mes, data = df.lin.B.p)
 
-serie <- ts(df.lin.B.p$per.dia.tot, start = 2019, frequency = 12)
-decom <- decompose(serie)
-plot(decom)
-
-model.lin.B.p <- lm(per.dia.tot ~ dia.sem, data = df.lin.B.p)
 kable(xtable(summary(model.lin.B.p)))
 
 
@@ -502,29 +730,35 @@ df.lin.B.p$pred <- predict(model.lin.B.p, newdata = df.lin.B.p)
 df.lin.B.p$per.dia.tot <- as.numeric(df.lin.B.p$per.dia.tot)
 df.lin.B.p$pred <- as.numeric(df.lin.B.p$pred)
 
-ajust <- df.lin.B.p %>% gather(key="Linea", value="Cantidad", per.dia.tot, pred)
+ajust <- df.lin.B.p |> gather(key="Linea", value="Cantidad", per.dia.tot, pred)
 
 
-ajust %>% ggplot(aes(x=fecha, y=Cantidad,
-col=Linea))+
-geom_line()
+p4 <- ajust |> ggplot(aes(x = fecha, y = Cantidad,
+                    col = Linea)) + geom_line()+ labs(title = "Linea B después de la pandemia") + guides(color = "none")
+
+
 ```
+Se puede observar en los *summary* de los 4 modelos que:
+
+- El nivel de referencia es el intercepto $\beta_0$ y representa el efecto del mes de Enero y el dia Lunes en el flujo de pasajeros.
+- Para la serie *antes de la pandemia* y *línea A* se puede observar que todas las covariables son significativas menos el intercepto $\beta_0$, esto significa que todas sirven para modelar la serie, pero la tendencia explicada por el mes Enero y el dia Lunes está cerca de 0, osea, no aporta una tendencia significante.
+- Para la serie *después de la pandemia* y *línea A* se puede observar que todas las covariables son significativas menos $\beta_{mes.agosto}$, esto significa que todas sirven para modelar la serie, pero la tendencia explicada por la tendencia del mes de Agosto no difiere a la del mes de Enero y el dia Lunes, el cual es el mes y dia de referencia contenido en $\beta_0$, de otra se puede interpretar que $\beta_{mes.agosto}$ está muy cercano a 0 porque su tendencia ya fue explicada por el mes de Enero y el dia Lunes.
+
+- Para la serie *antes de la pandemia* y *línea B* se puede observar que todas las covariables son significativas menos $fecha$, esto significa que todas sirven para modelar la serie, pero la tendencia explicada por la tendencia global de la serie, osea, la línea recta con menor distancia a *todos* los puntos es 0, esto podria interpretarse como que la serie es estacionaria, aunque faltaria verificar que la varianza sea constante y la correlación no dependa del tiempo. 
+
+- Para la serie *después de la pandemia* y *línea B* se puede observar que todas las covariables son significativas menos $\beta_{mes.junio}$ y $\beta_{mes.julio}$, esto significa que todas sirven para modelar la serie, pero la tendencia explicada por estos dos meses no difiere a la del mes de Enero y el dia Lunes, el cual es el mes y dia de referencia contenido en el intercepto $\beta_0$.
+
+- Además, es de notar que las series para antes de la pandemia tenian mucha menos variablidad y un comportamiento deseado, ya que son mucho mas faciles de modelar que después de la pandemia.
 
 
+```{r}
+#| fig-height: 5
+#| fig-align: center
+#| layout: [[42, 42], [42, 42]]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+p1
+p2
+p3
+p4
+```
 
