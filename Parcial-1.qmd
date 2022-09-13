@@ -1,6 +1,6 @@
 ---
 title: "Parcial 1"
-author: "Julián Úsuga Ortiz - Ivan Santiago Rojas Martinez"
+author: "Julián Alejandro Úsuga Ortiz - Ivan Santiago Rojas Martinez"
 execute:
   echo: false
   warning: false
@@ -225,7 +225,7 @@ acf(X)
 pacf(X)
 ```
 
-Al comparar las ACF como las PACF muestrales con las teóricas se puede ver una similitud grande, además, se puede ver que la serie se corta después del Lag $3$ en la ACF y se reduce infinitamente de forma senoidal en la PACF, propiedades de un modelo MA(3).
+Al comparar las ACF como las PACF muestrales con las teóricas se puede ver una similitud grande, además, se puede ver que la serie se corta después del Lag $2$ en la ACF y se reduce infinitamente de forma senoidal en la PACF, propiedades de un modelo MA(2).
 
 \newpage
 
@@ -484,7 +484,7 @@ bind_rows(dat_lin_A, dat_lin_B) |>
   scale_x_datetime(breaks = "2 hour", date_labels =  "%H") + 
   facet_grid(cols = vars(pandemia), rows = vars(linea),
              labeller=as_labeller(facet.names), scales = "free") +
-  labs(title = "Promedio de pasajeros por hora para la línea A", 
+  labs(title = "Promedio de pasajeros por hora para la línea A y B", 
        x = "Hora de servicio", 
        y = "Promedio de pasajeros") +
   scale_color_discrete(name = "Dia de la\nSemana") + 
@@ -633,7 +633,7 @@ Tambien se debe notar que las series para después de la pandemia no tiene una v
 \text{Numero Pasajeros = } & \beta_{0} + \beta_{dia.sem.Martes} I_{dia.sem.Martes} +\\
 & \beta_{dia.sem.Miercoles} I_{dia.sem.Miercoles} + \beta_{dia.sem.Jueves} I_{dia.sem.Jueves} +\\
 & \beta_{dia.sem.Viernes} I_{dia.sem.Viernes} + \beta_{dia.sem.Sabado} I_{dia.sem.Sabado} +\\
-& \beta_{dia.sem.Domingo} I_{dia.sem.Domingo} + \beta_{mes.1} I_{mes.1} +\\
+& \beta_{dia.sem.Domingo} I_{dia.sem.Domingo} +\\
 & \beta_{mes.2} I_{mes.2} + \beta_{mes.3} I_{mes.3} + \\
 & \beta_{mes.4} I_{mes.4} + \beta_{mes.5} I_{mes.5} +\\
 & \beta_{mes.6} I_{mes.6} + \beta_{mes.7} I_{mes.7} +\\
