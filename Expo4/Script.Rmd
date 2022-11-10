@@ -1,0 +1,210 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+library(readr)
+library(tidyverse)
+library(lubridate)
+library(tsoutliers)
+library(forecast)
+library(fpp2)
+```
+
+
+```{r}
+accent <- "#018001"
+data <- read_csv("data/2410005001-eng.csv", 
+    skip = 9, n_max = 2)
+data <- data[2, ]
+```
+
+```{r}
+data <- data |> gather(key = "date", value = "travellers")
+
+data <- data[-1, ]
+
+data$travellers <- sapply(data$travellers, gsub, pattern = ",", replacement= "")
+
+data$travellers <- as.integer(data$travellers)
+
+data$date <- my(data$date)
+```
+
+```{r}
+data <- data |> filter(date >= as.Date("1990/01/01"))
+
+data$travellers<-data$travellers/1000000
+```
+
+
+```{r}
+data |> ggplot(aes(x = date, y = travellers)) + geom_line(color = accent) + labs(x = "", y = "Travellers (in M)", title = "Travellers entering Canada each month") + theme_linedraw()
+```
+
+```{r}
+data |> filter(date >= as.Date("2014/01/01")) |> ggplot(aes(x = date, y = travellers)) + geom_line(color = accent)+ geom_point(size = 1.75, color = accent) + labs(x = "", y = "Travellers (in M)", title = "Travellers entering Canada each month") + theme_linedraw()
+```
+
+```{r}
+data$year <- year(data$date) |> as.factor()
+data$month <- month(data$date) |> as.factor()
+```
+
+```{r}
+data |> filter(date >= as.Date("2014/01/01")) |> 
+  ggplot(aes(x = month, y = travellers, group = year)) + 
+  geom_line(aes(color = year), size = 0.9) + 
+  labs(x = "", y = "Travellers (in M persons)", 
+       title = "Travellers entering Canada by year from 2014 to 2022") + 
+  theme_linedraw() + 
+  scale_colour_manual(
+  values = c(rep("#018001", 6), "#b90000", "orange", "#001bff"),
+  aesthetics = "colour",
+  breaks = waiver(),
+  na.value = "grey50"
+)
+```
+
+```{r}
+data.ts <- ts(data$travellers,
+              start = c(1990, 1),
+              frequency = 12)
+```
+
+
+```{r}
+n <- 12
+
+tc.abr.2020 <- cbind(I1 = stats::filter(
+  as.integer(seq_along(c(data.ts, rep(1, n))) == 364),
+  filter = 0.77,
+  method = "rec",
+  sides = 1
+)) 
+
+#plot(tc.abr.2020)
+
+cov.df <- data.frame(
+  ao.sep.2001 = as.integer(seq_along(c(data.ts, rep(1, n))) == 141),
+  ls.mar.2020 = as.integer(seq_along(c(data.ts, rep(1, n))) >= 363),
+  tc.abr.2020 = tc.abr.2020,
+  ls.ago.2021 = as.integer(seq_along(c(data.ts, rep(1, n))) >= 380)
+  )
+
+```
+
+
+```{r}
+arima.ts <-
+  auto.arima(data.ts, seasonal = TRUE, xreg = as.matrix(cov.df[1:(nrow(cov.df) - 12),]))
+arima.ts # este modelo tiene un AIC de -140.16
+
+f.travellers <- forecast(
+  arima.ts, h = 1, xreg = 
+    as.matrix(
+      cov.df[(nrow(cov.df) - 12):(nrow(cov.df)),]
+      ))
+plot(f.travellers$fitted)
+```
+
+
+```{r}
+# no
+model.int <- arimax(
+  data.ts,
+  order = c(2, 0, 2),
+  seasonal = list(order = c(2, 1, 1)),
+  xreg = cov.df[1:(nrow(cov.df) - 12),]
+)
+
+model.int |> coeftest()
+model.int |> checkresiduals()
+model.int
+```
+
+```{r}
+plot(f.travellers$mean)
+
+df.pred <- data.frame(travellers = as.matrix(f.travellers$mean),
+           date = as.Date(as.yearmon(time(f.travellers$mean))))
+
+df.pred$forecast <- 1
+data$forecast <- 0
+
+bind_rows(data, df.pred) |> ggplot(aes(x = date, y = travellers, color = forecast)) + geom_line() +
+  scale_colour_steps(low = "darkgreen",
+                     high = "red",) + guides(color = "none")
+```
+
+
+
+```{r}
+# LS 1 desde el dato hasta lo ultimo
+# TC 1 en el dato, va decayendo hasta lo ultimo
+# AO 1 en el dato y cero el resto(antes y despues)
+
+# Como medida descriptiva se podría afirmar que los datos atípicos son
+
+# Index 141: Septiembre 2001 (AO)
+# Index 363: Marzo 2020 (LS)
+# Index 364: Abril 2020 (TC)
+# Index 380: Agosto 2021 (LS)
+# pueden ser mas o diferentes tipos
+```
+
+
+```{r}
+delta <- seq(0.1, 0.90, 0.1)
+aic_1 <- vector()
+ljungbox1 <- vector()
+i = 0
+for (d in delta) { # esto dura un tiempo pero los resultados estan abajo
+  i = i + 1
+  modelo_outl <- tso(data.ts, delta = d)
+  aic_1[i] <- modelo_outl$fit$aic
+  ljungbox1[i] <- checkresiduals(modelo_outl$fit,
+                                 plot = FALSE)$p.value
+}
+
+# aic # AIC=-282.87   AICc=-281.18   BIC=-215.89
+which.min(aic_1) # 5 
+delta[5] # 0.5
+ljungbox1[5] # 0.2315402
+
+# se usa el delta encontrado
+model.travellers <- tso(data.ts, delta=0.5, types = c("AO","LS","TC"))
+outliers.effects(model.travellers$outliers, 392 + 10)
+model.travellers
+
+plot(model.travellers) # esta gráfica muestra un error, seria interesante mostrarla para enseñar que corregimos los errores de la función default de la función
+# los outliers que muestra son:
+# Outliers:
+#   type ind    time coefhat   tstat
+# 1   LS 141 2001:09 -1.1772 -10.083
+# 2   LS 352 2019:04  0.7758   6.379
+# 3   LS 363 2020:03 -1.1266  -9.048
+# 4   TC 366 2020:06 -1.1158  -7.302
+# 5   LS 367 2020:07 -1.4422  -9.948
+# 6   LS 369 2020:09  1.2426   7.840
+# 7   LS 378 2021:06 -0.9538  -6.266
+# 8   AO 379 2021:07 -0.6985  -6.478
+# 9   LS 381 2021:09  1.2628   6.400
+
+qqnorm(model.travellers$fit$residuals); abline(a = 0, b = 1)
+
+outliers.effects(model.travellers$outliers, 392 + 10)
+
+outliers.df <- data.frame(x = data[model.travellers$outliers$ind,]$date, y = data[model.travellers$outliers$ind,]$travellers)
+
+data |> ggplot(aes(x = date, y = travellers)) + 
+  geom_line(color = accent) + 
+  labs(x = "", y = "Travellers (in M)", title = "Travellers entering Canada each month") + 
+  theme_linedraw() + 
+  geom_point(data = outliers.df, aes(x = x, y = y), color = "red")
+predict(model.travellers)
+```
+
