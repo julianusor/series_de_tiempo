@@ -12,6 +12,8 @@ library(lubridate)
 library(tsoutliers)
 library(forecast)
 library(fpp2)
+library(lubridate)
+library(zoo)
 ```
 
 
@@ -137,7 +139,7 @@ data$forecast <- 0
 
 bind_rows(data, df.pred) |> ggplot(aes(x = date, y = travellers, color = forecast)) + geom_line() +
   scale_colour_steps(low = "darkgreen",
-                     high = "red",) + guides(color = "none")
+                     high = "red",) + guides(color = "none")+ theme_linedraw()
 ```
 
 
