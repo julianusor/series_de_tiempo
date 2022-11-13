@@ -1,0 +1,184 @@
+---
+title: "Serie de tiempo de visitantes de Canadá"
+author: "Julian"
+date: "2022-11-12"
+output:
+  beamer_presentation:
+    theme: "Frankfurt"
+    colortheme: "dolphin"
+    fonttheme: "structurebold"
+    slide_level: 2
+bibliography: ref.bib
+biblio-style: apalike
+urlcolor: blue
+---
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(readr)
+library(tidyverse)
+library(lubridate)
+library(tsoutliers)
+library(forecast)
+library(fpp2)
+library(lubridate)
+library(zoo)
+accent <- "#018001"
+data <- read_csv("data/2410005001-eng.csv", 
+    skip = 9, n_max = 2)
+data <- data[2, ]
+```
+
+
+# Nuestra serie de tiempo
+
+Nuestra serie consiste en el numero de extranjeros que visitaron a Canadá por mes. En este numero se encuentran personas que viajan por negocios, estudios o turismo.
+
+. . .
+
+Esta serie es importante ya que esta cifra representa mucho para la economía de un país. Poder saber el numero de visitantes es importante y mucho mas después de que el COVID cambiara tanto los hábitos de muchas personas.
+
+# Datos usados
+
+## Obtención de datos
+
+Los datos fueron obtenidos del sitio web **Statistics Canada** que es la oficina nacional de estadística de este país. Los datos 
+
+. . .
+
+Statistics Canada. [Table 24-10-0050-01 Non-resident visitors entering Canada, by country of residence](https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2410005001)
+
+**DOI:** [https://doi.org/10.25318/2410005001-eng](https://doi.org/10.25318/2410005001-eng)
+
+---
+
+## Lectura
+
+Al descargar los datos encontramos la siguiente estructura
+
+![Estructura original de los datos.](images/stat_can_data.png)
+
+![Estructura original de los datos.](images/data_csv.png)
+
+
+## Limpieza
+
+```{r}
+# data tiene 1 fila y 601 columnas
+data
+```
+
+---
+
+```{r, echo=TRUE}
+# Pasar a formato largo
+data <- data |> gather(key = "date", value = "visitors")
+
+# Quitar el primer dato
+data <- data[-1, ]
+
+# Quitar las comas de los números
+data$visitors <- sapply(data$visitors, 
+                          gsub, 
+                          pattern = ",", 
+                          replacement= "")
+
+# Convertir la columna a numérica
+data$visitors <- as.integer(data$visitors)
+
+# Convertir de tipo string "mes año" a tipo fecha
+data$date <- my(data$date)
+```
+
+---
+
+```{r}
+head(data)
+```
+
+---
+
+Usaremos los datos desde 1990 y pasar de escala a millones.
+
+```{r}
+data <- data |> filter(date >= as.Date("1990/01/01"))
+
+data$visitors<-data$visitors/1000000
+
+head(data)
+```
+
+## Analisis descriptivo
+
+```{r echo=FALSE, fig.width=6, fig.height=4}
+data |> ggplot(aes(x = date, y = visitors)) + geom_line(color = accent) + labs(x = "", y = "Visitors (in M persons)", title = "Visitors entering Canada each month") + theme_bw()
+```
+
+---
+
+```{r echo=FALSE, fig.width=6, fig.height=4}
+data |> filter(date >= as.Date("2014/01/01")) |> ggplot(aes(x = date, y = visitors)) + geom_line(color = accent)+ geom_point(size = 1.75, color = accent) + labs(x = "", y = "visitors (in M persons)", title = "Visitors entering Canada each month") + theme_bw()
+```
+
+---
+
+```{r  echo=FALSE, fig.width=6, fig.height=4}
+data$year <- year(data$date) |> as.factor()
+data$month <- month(data$date) |> as.factor()
+
+data |> filter(date >= as.Date("2014/01/01")) |>
+  ggplot(aes(x = month, y = visitors, group = year)) +
+  geom_line(aes(color = year), size = 0.9) +
+  labs(x = "", y = "Visitors (in M persons)",
+       title = "Visitors entering Canada by year from 2014 to 2022") + theme_bw() +
+  scale_colour_manual(
+    values = c(rep("#018001", 6), "#b90000", "orange", "#001bff"),
+    aesthetics = "colour",
+    breaks = waiver(),
+    na.value = "grey50"
+  )
+```
+
+
+
+# Modelo a utilizar y alternativas.
+
+Como se pudo ver nuestra serie no se podria modelar con un SARIMA por su forma y la caida abrupta del turismo que ocurrió en 2020. Por lo que intentamos identificar todos los outliers.
+
+. . . 
+
+Con la función tso obtuvimos los outliers de nuestra serie, pero se obtuvo que .
+
+
+# Resultados del ajuste, diagnóstico y medidas remediales para obtener un mejor ajuste.
+
+```{r  message=FALSE, warning=FALSE, include=FALSE}
+data.ts <- ts(data$visitors,
+              start = c(1990, 1),
+              frequency = 12)
+```
+
+
+```{r warning=FALSE}
+# se usa el delta que minimiza el AIC encontrado usando un grid
+model.visitors <- tso(data.ts, delta=0.5, types = c("AO","LS","TC"))
+#outliers.effects(model.visitors$outliers, 392 + 10)
+#model.visitors
+
+plot(model.visitors) # esta gráfica muestra un error, seria interesante mostrarla para enseñar que corregimos los errores de la función default de la función
+```
+
+a
+
+# Realización y validación de las predicciones.
+
+b
+
+
+# Conclusiones y recomendaciones.
+
+c
+
+
+# Citaciones
+
+- Statistics Canada. [Table 24-10-0050-01 Non-resident visitors entering Canada, by country of residence](https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2410005001). **DOI:** [https://doi.org/10.25318/2410005001-eng](https://doi.org/10.25318/2410005001-eng)
