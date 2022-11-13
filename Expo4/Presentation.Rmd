@@ -129,7 +129,7 @@ data |> filter(date >= as.Date("2014/01/01")) |>
   ggplot(aes(x = month, y = visitors, group = year)) +
   geom_line(aes(color = year), size = 0.9) +
   labs(x = "", y = "Visitors (in M persons)",
-       title = "Visitors entering Canada by year from 2014 to 2022") + theme_bw() +
+       title = "Visitors entering Canada by year from 2014 to 2022") +  theme_bw()+
   scale_colour_manual(
     values = c(rep("#018001", 6), "#b90000", "orange", "#001bff"),
     aesthetics = "colour",
@@ -146,7 +146,7 @@ Como se pudo ver nuestra serie no se podria modelar con un SARIMA por su forma y
 
 . . . 
 
-Con la función tso obtuvimos los outliers de nuestra serie, pero se obtuvo que .
+Con la función tso obtuvimos los outliers de nuestra serie, pero pensamos que los puntos atípicos estaban mal ubicados por lo que se decidió ubicar unos nuevos y comparar.
 
 
 # Resultados del ajuste, diagnóstico y medidas remediales para obtener un mejor ajuste.
@@ -157,26 +157,170 @@ data.ts <- ts(data$visitors,
               frequency = 12)
 ```
 
-
-```{r warning=FALSE}
-# se usa el delta que minimiza el AIC encontrado usando un grid
-model.visitors <- tso(data.ts, delta=0.5, types = c("AO","LS","TC"))
-#outliers.effects(model.visitors$outliers, 392 + 10)
-#model.visitors
-
-plot(model.visitors) # esta gráfica muestra un error, seria interesante mostrarla para enseñar que corregimos los errores de la función default de la función
+```{r}
+ts.no.val <- ts(
+    data$visitors[1:387],
+    start = c(1990, 1),
+    frequency = 12
+  )
 ```
 
-a
+```{r}
+# Usando coeficientes de forma manual
+len.total <- 1:(392 + 12)
+tc.ago.2021 <- cbind(I1 = stats::filter(
+  as.integer(seq_along(len.total) == 380),
+  filter = 0.5,
+  method = "rec",
+  sides = 1
+))
+```
+
+---
+
+```{r}
+cov.df <- data.frame(
+  ls.sep.2001 = as.integer(seq_along(len.total) >= 141),
+  ls.mar.2020 = as.integer(seq_along(len.total) >= 363),
+  ls.abr.2020 = as.integer(seq_along(len.total) >= 364),
+  ao.may.2020 = as.integer(seq_along(len.total) == 365),
+  ao.jun.2020 = as.integer(seq_along(len.total) == 366),
+  ao.jul.2020 = as.integer(seq_along(len.total) == 367),
+  ao.ago.2020 = as.integer(seq_along(len.total) == 368),
+  ao.sep.2020 = as.integer(seq_along(len.total) == 369),
+  ao.oct.2020 = as.integer(seq_along(len.total) == 370),
+  ao.nov.2020 = as.integer(seq_along(len.total) == 371),
+  ao.dic.2020 = as.integer(seq_along(len.total) == 372),
+  ao.ene.2021 = as.integer(seq_along(len.total) == 373),
+  ao.feb.2021 = as.integer(seq_along(len.total) == 374),
+  ao.mar.2021 = as.integer(seq_along(len.total) == 375),
+  ao.abr.2021 = as.integer(seq_along(len.total) == 376),
+  ao.may.2021 = as.integer(seq_along(len.total) == 377),
+  ao.jun.2021 = as.integer(seq_along(len.total) == 378),
+  ao.jul.2021 = as.integer(seq_along(len.total) == 379),
+  tc.ago.2021 = tc.ago.2021
+  )
+```
+
+---
+
+```{r}
+model.arima <-
+  auto.arima(ts.no.val, seasonal = TRUE, 
+             xreg = as.matrix(cov.df[1:387,]))
+
+# Usando la libreria tso para encontrar los outliers
+model.tso <- tso(
+  ts.no.val,
+  delta = 0.5, # Se usa el delta que minimiza 
+               # el AIC encontrado usando un grid
+  types = c("AO", "LS", "TC")
+);
+
+
+xreg.tso <- outliers.effects(model.tso$outliers, 392 + 12)
+xreg.tso
+```
+
+---
+
+```{r tres_graficas, echo=FALSE, fig.width=6, fig.height=4}
+pred.manual <- forecast(model.arima, xreg =
+                          as.matrix(cov.df[388:404, ]))
+pred.tso <-
+  forecast(model.tso$fit,
+           xreg = outliers.effects(model.tso$outliers, 392 +  12)[388:404, ])
+
+data.frame(
+  real = data[1:(392-5), ]$visitors,
+  pred.tso = pred.tso$fitted,
+  pred.manual = pred.manual$fitted,
+  date = data[1:(392-5), ]$date
+) |> ggplot(aes(x = date)) + 
+  geom_line(aes(y = real)) +
+  geom_line(aes(y = pred.tso), color = "red", linetype = "dashed")+
+  geom_line(aes(y = pred.manual), color = "darkgreen", linetype = "dashed") + theme_bw()
+```
 
 # Realización y validación de las predicciones.
 
-b
+```{r, echo=FALSE}
+pred.manual <- forecast(model.arima, xreg =
+                          as.matrix(cov.df[388:392, ]))
+pred.tso <-
+  forecast(model.tso$fit,
+           xreg = outliers.effects(model.tso$outliers, 392 +  12)[388:392, ])
+```
+
+
+```{r}
+# MSE para los ultimos 5 datos no 
+# considerados en el entrenamiento 
+paste("MSE manual: ", mean((data[388:392, ]$visitors - pred.manual$mean[1:5])^2))
+paste("MSE tso: ", mean((data[388:392, ]$visitors - pred.tso$mean[1:5])^2))
+```
+
+```{r}
+model.tso$fit$coef |> length() |> print()
+
+model.arima$coef |> length() |> print()
+```
+
+
+---
+
+
+```{r, echo=FALSE, fig.width=6, fig.height=4}
+pred.manual <- forecast(model.arima, xreg =
+                          as.matrix(cov.df[388:404,]))
+pred.tso <-
+  forecast(model.tso$fit,
+           xreg = outliers.effects(model.tso$outliers, 392 +  12)[388:404,])
+
+preds.df <- data.frame(
+  date = seq(dmy("01-10-2022"),
+             dmy("01-09-2023"),
+             by = "month"),
+  pred.manual = pred.manual$mean[6:17],
+  pred.manual.l = pred.manual$lower[6:17],
+  pred.manual.u = pred.manual$upper[6:17],
+  pred.tso.l = pred.tso$lower[6:17],
+  pred.tso.u = pred.tso$upper[6:17],
+  pred.tso = pred.tso$mean[6:17]
+)
+
+data.frame(real = data$visitors,
+           date = data$date)[300:392, ] |> ggplot() + #
+  geom_line(aes(x = date, y = real), color = accent) +
+  geom_line(data = preds.df, aes(x = date, y = pred.manual), color = "blue") +
+  geom_ribbon(
+    data = preds.df,
+    aes(
+      x = date,
+      ymax = pred.manual.u,
+      ymin = pred.manual.l
+    ),
+    alpha = 0.3,
+    fill = "blue"
+  ) +
+  geom_line(data = preds.df, aes(x = date, y = pred.tso), color = "red")+
+  geom_ribbon(
+    data = preds.df,
+    aes(
+      x = date,
+      ymax = pred.tso.u,
+      ymin = pred.tso.l
+    ),
+    alpha = 0.3,
+    fill = "red"
+  )+ theme_bw()
+```
+
 
 
 # Conclusiones y recomendaciones.
 
-c
+conclu
 
 
 # Citaciones
