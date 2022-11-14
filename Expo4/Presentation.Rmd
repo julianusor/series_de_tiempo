@@ -8,7 +8,6 @@ output:
     colortheme: "dolphin"
     fonttheme: "structurebold"
     slide_level: 2
-bibliography: ref.bib
 biblio-style: apalike
 urlcolor: blue
 ---
@@ -242,6 +241,88 @@ data.frame(
   geom_line(aes(y = pred.manual), color = "darkgreen", linetype = "dashed") + theme_bw()
 ```
 
+---
+
+# Supuestos de los modelos. 
+
+## Modelo Arima
+
+```{r, echo=FALSE, fig.height=8, fig.width=8}
+model.arima
+```
+
+
+---
+
+```{r, echo=FALSE}
+model.arima %>% checkresiduals()
+```
+
+
+---
+
+
+```{r, echo=FALSE, fig.width=6, fig.height=6, fig.align='center'}
+model.arima$residuals %>% qqnorm()
+model.arima$residuals %>% qqline()
+```
+
+
+---
+
+```{r, echo=FALSE}
+library(tseries)
+jarque.bera.test(model.arima$residuals)
+```
+
+```{r, echo=FALSE}
+shapiro.test(model.arima$residuals)
+```
+
+
+--- 
+
+## Modelo tso
+
+```{r, echo=FALSE}
+model.tso
+```
+
+
+---
+
+```{r, echo=FALSE, warning=FALSE}
+model.tso$fit$residuals %>% checkresiduals()
+```
+
+---
+
+
+```{r, echo=FALSE}
+Box.test(model.tso$fit$residuals, type = "Ljung")
+```
+
+
+
+```{r, echo=FALSE, fig.width=3, fig.height=3, fig.align='center'}
+model.tso$fit$residuals %>% qqnorm()
+model.tso$fit$residuals %>% qqline()
+```
+
+
+--- 
+
+```{r, echo=FALSE}
+library(tseries)
+jarque.bera.test(model.tso$fit$residuals)
+```
+
+```{r, echo=FALSE}
+shapiro.test(model.tso$fit$residuals)
+```
+
+---
+
 # Realización y validación de las predicciones.
 
 ```{r, echo=FALSE}
@@ -266,8 +347,6 @@ model.tso$fit$coef |> length() |> print()
 model.arima$coef |> length() |> print()
 ```
 
-
----
 
 
 ```{r, echo=FALSE, fig.width=6, fig.height=4}
