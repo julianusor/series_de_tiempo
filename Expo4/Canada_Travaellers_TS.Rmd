@@ -1,0 +1,22 @@
+---
+title: "Canada Travellers - Time Series"
+author: "Santiago Rojas"
+date: "2022-11-11"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+data <- read.csv("data/2410005001-eng.csv", skip = 8, sep=",")
+data <- data[2,]
+
+data <- data %>% gather(key = "date", value = "travellers")
+data <- data[-1, ]
+data$travellers <- sapply(data$travellers, gsub, pattern = ",", replacement= "")
+data$travellers <- as.integer(data$travellers)
+```
+

@@ -1,7 +1,7 @@
 ---
 title: "Serie de tiempo de visitantes de Canadá"
-author: "Julian"
-date: "2022-11-12"
+author: "Julian Alejandro Usuga Ortiz - Ivan Santiago Rojas Martinez"
+date: "2022-11-16"
 output:
   beamer_presentation:
     theme: "Frankfurt"
@@ -109,13 +109,13 @@ head(data)
 ## Analisis descriptivo
 
 ```{r echo=FALSE, fig.width=6, fig.height=4}
-data |> ggplot(aes(x = date, y = visitors)) + geom_line(color = accent) + labs(x = "", y = "Visitors (in M persons)", title = "Visitors entering Canada each month") + theme_bw()
+data |> ggplot(aes(x = date, y = visitors)) + geom_line(color = accent) + labs(x = "", y = "Visitantes (en M personas)", title = "Visitantes que ingresan a Canada cada mes") + theme_bw()
 ```
 
 ---
 
 ```{r echo=FALSE, fig.width=6, fig.height=4}
-data |> filter(date >= as.Date("2014/01/01")) |> ggplot(aes(x = date, y = visitors)) + geom_line(color = accent)+ geom_point(size = 1.75, color = accent) + labs(x = "", y = "visitors (in M persons)", title = "Visitors entering Canada each month") + theme_bw()
+data |> filter(date >= as.Date("2014/01/01")) |> ggplot(aes(x = date, y = visitors)) + geom_line(color = accent)+ geom_point(size = 1.75, color = accent) + labs(x = "", y = "Visitantes (en M personas)", title = "Visitantes que ingresan a Canada cada mes") + theme_bw()
 ```
 
 ---
@@ -127,8 +127,8 @@ data$month <- month(data$date) |> as.factor()
 data |> filter(date >= as.Date("2014/01/01")) |>
   ggplot(aes(x = month, y = visitors, group = year)) +
   geom_line(aes(color = year), size = 0.9) +
-  labs(x = "", y = "Visitors (in M persons)",
-       title = "Visitors entering Canada by year from 2014 to 2022") +  theme_bw()+
+  labs(x = "", y = "Visitantes (en M personas)",
+       title = "Visitantes que ingresan a Canada por año desde 2014 hasta 2022") +  theme_bw()+
   scale_colour_manual(
     values = c(rep("#018001", 6), "#b90000", "orange", "#001bff"),
     aesthetics = "colour",
@@ -175,9 +175,12 @@ tc.ago.2021 <- cbind(I1 = stats::filter(
 ))
 ```
 
----
+## Datos atípicos
 
-```{r}
+![](images/plot_outliers_tso.jpeg)
+
+
+```{r,  echo=FALSE, fig.height=4, fig.width=4}
 cov.df <- data.frame(
   ls.sep.2001 = as.integer(seq_along(len.total) >= 141),
   ls.mar.2020 = as.integer(seq_along(len.total) >= 363),
@@ -200,6 +203,10 @@ cov.df <- data.frame(
   tc.ago.2021 = tc.ago.2021
   )
 ```
+
+---
+
+![](images/code_outliers.jpeg)
 
 ---
 
@@ -238,26 +245,37 @@ data.frame(
 ) |> ggplot(aes(x = date)) + 
   geom_line(aes(y = real)) +
   geom_line(aes(y = pred.tso), color = "red", linetype = "dashed")+
-  geom_line(aes(y = pred.manual), color = "darkgreen", linetype = "dashed") + theme_bw()
+  geom_line(aes(y = pred.manual), color = "darkgreen", linetype = "dashed") +
+  ylab("Visitantes (en M personas)")+
+  xlab("Fecha")+
+  theme_bw()
 ```
 
----
+
 
 # Supuestos de los modelos. 
 
 ## Modelo Arima
 
-```{r, echo=FALSE, fig.height=8, fig.width=8}
-model.arima
-```
 
+<!-- ```{r, echo=FALSE, fig.height=6, fig.width=6} -->
+<!-- model.arima -->
+<!-- ``` -->
+
+![Modelo Arima](images/Model_Arima.jpeg)
 
 ---
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, include = FALSE}
 model.arima %>% checkresiduals()
 ```
 
+
+![checkresidual Modelo Arima ](images/checkresiduals_model_arima.jpeg)
+
+---
+
+![Ljung-Box test Modelo Arima](images/LB_test_model_arima.jpeg)
 
 ---
 
@@ -284,10 +302,15 @@ shapiro.test(model.arima$residuals)
 
 ## Modelo tso
 
-```{r, echo=FALSE}
-model.tso
-```
+<!-- # ```{r, echo=FALSE} -->
+<!-- # model.tso -->
+<!-- # ``` -->
 
+![Modelo tso](images/Model_tso.jpeg)
+
+---
+
+![Outliers Modelo tso](images/Modeltso_outliers.jpeg)
 
 ---
 
@@ -298,13 +321,18 @@ model.tso$fit$residuals %>% checkresiduals()
 ---
 
 
+<!-- ```{r, echo=FALSE} -->
+<!-- Box.test(model.tso$fit$residuals, type = "Ljung") -->
+<!-- ``` -->
+
+
+![Ljung-Box Test modelo tso](images/LB_test_model_tso.jpeg)
+
+
+
+---
+
 ```{r, echo=FALSE}
-Box.test(model.tso$fit$residuals, type = "Ljung")
-```
-
-
-
-```{r, echo=FALSE, fig.width=3, fig.height=3, fig.align='center'}
 model.tso$fit$residuals %>% qqnorm()
 model.tso$fit$residuals %>% qqline()
 ```
@@ -321,7 +349,6 @@ jarque.bera.test(model.tso$fit$residuals)
 shapiro.test(model.tso$fit$residuals)
 ```
 
----
 
 # Realización y validación de las predicciones.
 
@@ -399,7 +426,9 @@ data.frame(real = data$visitors,
 
 # Conclusiones y recomendaciones.
 
-conclu
+- En busca de un modelo que nos pueda ayudar hacer predicción sobre los visitantes que entran a Canadá. Se obtienen dos modelos los cuales se modelan teniendo en cuenta los datos atípicos e intervenciones. Dichos modelos carecen de los supuestos necesarios que nos permitan tener confianza estadística para concluir que se realizan buenas predicciones a futuro.
+
+
 
 
 # Citaciones
