@@ -40,7 +40,7 @@ Esta serie es importante ya que esta cifra representa mucho para la economía de
 
 ## Obtención de datos
 
-Los datos fueron obtenidos del sitio web **Statistics Canada** que es la oficina nacional de estadística de este país. Los datos 
+Los datos fueron obtenidos del sitio web **Statistics Canada** que es la oficina nacional de estadística de este país.
 
 . . .
 
@@ -158,13 +158,16 @@ data.ts <- ts(data$visitors,
 
 ```{r}
 ts.no.val <- ts(
-    data$visitors[1:387],
+    data$visitors[1:(nrow(data) - 5)],
     start = c(1990, 1),
     frequency = 12
   )
 ```
 
-```{r}
+## Datos atípicos
+
+
+```{r,  echo=FALSE, fig.height=4, fig.width=4}
 # Usando coeficientes de forma manual
 len.total <- 1:(392 + 12)
 tc.ago.2021 <- cbind(I1 = stats::filter(
@@ -173,14 +176,7 @@ tc.ago.2021 <- cbind(I1 = stats::filter(
   method = "rec",
   sides = 1
 ))
-```
 
-## Datos atípicos
-
-![](images/plot_outliers_tso.jpeg)
-
-
-```{r,  echo=FALSE, fig.height=4, fig.width=4}
 cov.df <- data.frame(
   ls.sep.2001 = as.integer(seq_along(len.total) >= 141),
   ls.mar.2020 = as.integer(seq_along(len.total) >= 363),
@@ -204,17 +200,21 @@ cov.df <- data.frame(
   )
 ```
 
----
 
 ![](images/code_outliers.jpeg)
 
 ---
 
 ```{r}
+# Usando las covariables establecidas por nosotros
 model.arima <-
   auto.arima(ts.no.val, seasonal = TRUE, 
              xreg = as.matrix(cov.df[1:387,]))
+```
 
+---
+
+```{r warning=FALSE}
 # Usando la libreria tso para encontrar los outliers
 model.tso <- tso(
   ts.no.val,
@@ -223,9 +223,14 @@ model.tso <- tso(
   types = c("AO", "LS", "TC")
 );
 
-
 xreg.tso <- outliers.effects(model.tso$outliers, 392 + 12)
 xreg.tso
+```
+
+---
+
+```{r}
+plot(model.tso)
 ```
 
 ---
@@ -328,8 +333,6 @@ model.tso$fit$residuals %>% checkresiduals()
 
 ![Ljung-Box Test modelo tso](images/LB_test_model_tso.jpeg)
 
-
-
 ---
 
 ```{r, echo=FALSE}
@@ -368,13 +371,21 @@ paste("MSE manual: ", mean((data[388:392, ]$visitors - pred.manual$mean[1:5])^2)
 paste("MSE tso: ", mean((data[388:392, ]$visitors - pred.tso$mean[1:5])^2))
 ```
 
-```{r}
-model.tso$fit$coef |> length() |> print()
+---
 
-model.arima$coef |> length() |> print()
+```{r}
+model.arima$coef |> length()
+model.tso$fit$coef |> length() 
 ```
 
+---
 
+```{r}
+model.arima$bic
+model.tso$fit$bic
+```
+
+---
 
 ```{r, echo=FALSE, fig.width=6, fig.height=4}
 pred.manual <- forecast(model.arima, xreg =
@@ -426,10 +437,15 @@ data.frame(real = data$visitors,
 
 # Conclusiones y recomendaciones.
 
-- En busca de un modelo que nos pueda ayudar hacer predicción sobre los visitantes que entran a Canadá. Se obtienen dos modelos los cuales se modelan teniendo en cuenta los datos atípicos e intervenciones. Dichos modelos carecen de los supuestos necesarios que nos permitan tener confianza estadística para concluir que se realizan buenas predicciones a futuro.
+En busca de un modelo que nos pueda ayudar a hacer predicciones sobre los visitantes que entran a Canadá se obtienen dos modelos, los cuales se encuentran teniendo en cuenta los datos atípicos e intervenciones. 
 
+. . . 
 
+Se obtiene dos modelos, uno con la función **tso**, la cual intenta encontrar los puntos atípicos automáticamente y el otro en el que asignamos manualmente los puntos atípicos y los usamos como covariables en el modelo.
 
+. . . 
+
+Se observa que a pesar de que ambos modelos no cumplen de los supuestos necesarios el modelo en el que asignamos manualmente los puntos atípicos tiene mejor MSE de prueba, AIC y BIC.
 
 # Citaciones
 
