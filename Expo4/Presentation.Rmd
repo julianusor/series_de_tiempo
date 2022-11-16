@@ -12,7 +12,7 @@ biblio-style: apalike
 urlcolor: blue
 ---
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 library(readr)
 library(tidyverse)
 library(lubridate)
@@ -229,7 +229,7 @@ xreg.tso
 
 ---
 
-```{r}
+```{r, echo = FALSE}
 plot(model.tso)
 ```
 
@@ -421,6 +421,9 @@ data.frame(real = data$visitors,
     fill = "blue"
   ) +
   geom_line(data = preds.df, aes(x = date, y = pred.tso), color = "red")+
+  ggtitle("Predicciones 12 meses a futuro")+
+  ylab("Visitantes (en M personas)")+
+  xlab("Fecha")+
   geom_ribbon(
     data = preds.df,
     aes(
