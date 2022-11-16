@@ -260,14 +260,14 @@ data.frame(
 
 # Supuestos de los modelos. 
 
-## Modelo Arima
+## Modelo Sarimax
 
 
 <!-- ```{r, echo=FALSE, fig.height=6, fig.width=6} -->
 <!-- model.arima -->
 <!-- ``` -->
 
-![Modelo Arima](images/Model_Arima.jpeg)
+![Modelo Sarimax](images/Model_Arima.jpeg)
 
 ---
 
@@ -276,11 +276,11 @@ model.arima %>% checkresiduals()
 ```
 
 
-![checkresidual Modelo Arima ](images/checkresiduals_model_arima.jpeg)
+![checkresidual Modelo Sarimax ](images/checkresiduals_model_arima.jpeg)
 
 ---
 
-![Ljung-Box test Modelo Arima](images/LB_test_model_arima.jpeg)
+![Ljung-Box test Modelo Sarimax](images/LB_test_model_arima.jpeg)
 
 ---
 
