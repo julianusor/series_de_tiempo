@@ -1,0 +1,121 @@
+---
+title: "Forecasting Travellers entering Canada"
+author: "Julián Alejandro Úsuga Ortiz"
+date: "12/12/2022"
+#toc: true
+format:
+  html:
+#    html-math-method: katex
+    code-tools: false
+    echo: false
+#    self-contained: true
+execute:
+  warning: false
+---
+
+# Goal
+
+In this project the goal was trying to predict the number of travellers entering Canada one year into the future. 
+
+Since we only have data up until October 2022, we predict the number of travellers for the next 12 months after this date.
+
+The data was obtained from **Statistics Canada**, [Table 24-10-0050-01 Non-resident visitors entering Canada, by country of residence](https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2410005001).
+
+
+# Results
+
+The model is created with all the data and the predicted number of travellers are plotted along with the previous months.
+
+As we can see the COVID-19 pandemic and lockdowns generated a significant drop in the number of travellers.
+The predictions show us a potential recovery in the number of travellers and tourism.
+
+
+```{r}
+library(dygraphs)
+library(tidyverse)
+library(forecast)
+load(file = "data/data.RData")
+```
+
+```{r}
+# data transforming
+
+data.ts <- ts(data$visitors, start = c(1990, 1), frequency = 12)
+```
+
+```{r}
+# model
+
+len.total <- 1:(length(data.ts) + 12)
+
+tc.ago.2021 <- cbind(I1 = stats::filter(
+  as.integer(seq_along(len.total) == 380),
+  filter = 0.5,
+  method = "rec",
+  sides = 1
+))
+
+
+cov.df <- data.frame(
+  ls.sep.2001 = as.integer(seq_along(len.total) >= 141),
+  ls.mar.2020 = as.integer(seq_along(len.total) >= 363),
+  ls.abr.2020 = as.integer(seq_along(len.total) >= 364),
+  ao.may.2020 = as.integer(seq_along(len.total) == 365),
+  ao.jun.2020 = as.integer(seq_along(len.total) == 366),
+  ao.jul.2020 = as.integer(seq_along(len.total) == 367),
+  ao.ago.2020 = as.integer(seq_along(len.total) == 368),
+  ao.sep.2020 = as.integer(seq_along(len.total) == 369),
+  ao.oct.2020 = as.integer(seq_along(len.total) == 370),
+  ao.nov.2020 = as.integer(seq_along(len.total) == 371),
+  ao.dic.2020 = as.integer(seq_along(len.total) == 372),
+  ao.ene.2021 = as.integer(seq_along(len.total) == 373),
+  ao.feb.2021 = as.integer(seq_along(len.total) == 374),
+  ao.mar.2021 = as.integer(seq_along(len.total) == 375),
+  ao.abr.2021 = as.integer(seq_along(len.total) == 376),
+  ao.may.2021 = as.integer(seq_along(len.total) == 377),
+  ao.jun.2021 = as.integer(seq_along(len.total) == 378),
+  ao.jul.2021 = as.integer(seq_along(len.total) == 379),
+  tc.ago.2021 = tc.ago.2021
+  )
+```
+
+
+```{r}
+model.arima <-
+  auto.arima(data.ts, seasonal = TRUE, 
+             xreg = as.matrix(cov.df[1:length(data.ts),]))
+
+start.pred <- length(data.ts) - 1
+end.pred <- start.pred + 12
+pred.arima <- forecast(model.arima, xreg =
+                          as.matrix(cov.df[start.pred:end.pred, ]))
+```
+
+
+```{r}
+
+# 80 % c.i
+
+data.plot <-
+  cbind(data.ts,
+        lwr = pred.arima$lower[, 1],
+        upr = pred.arima$upper[, 1],
+        pred = pred.arima$mean)
+
+
+dygraph(data.plot, main = "Travellers that visited Canada") %>%
+  dySeries(label = "Travellers") %>%
+  dyAxis("y", label = "Travellers (in M people)") %>%
+  dySeries(c("lwr", "pred", "upr"), label = "Prediction") %>%
+  dyRangeSelector(dateWindow = c("2000-01-01", "2023-10-01"))
+```
+
+
+# Predictions
+
+The predictions of the model expressed in millions of travellers. eg. for February of 2023 the expected number of travellers entering Canada is **988787** with a 80% confidence interval of **(733628, 1243947)**.
+
+```{r}
+knitr::kable(pred.arima)
+```
+
